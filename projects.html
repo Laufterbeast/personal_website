@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Projects — Joey Laufter</title>
+  <meta name="description" content="Selected projects including Campus BookShare and a personal site refactor." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="logo" href="index.html">Joey Laufter</a>
+    <nav aria-label="Primary" class="nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About Me</a>
+      <a href="resume.html">Resume</a>
+      <a href="projects.html" class="active" aria-current="page">Projects</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <div class="page-header">
+    <h1>Featured Projects</h1>
+    <p class="page-subtitle">A collection of my recent work showcasing full-stack development, design, and problem-solving skills.</p>
+    <div class="page-actions">
+      <button class="btn btn-primary add-project-btn" onclick="addNewProject()">
+        <span>Add New Project</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="projects-showcase" id="projects-showcase">
+    <!-- Projects will be loaded dynamically from database -->
+    <div class="loading">Loading projects...</div>
+  </div>
+
+  <!-- Add/Edit Project Modal -->
+  <div id="project-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Add New Project</h2>
+        <button class="close-btn" onclick="closeProjectModal()">&times;</button>
+      </div>
+      <form id="project-form">
+        <input type="hidden" id="project-id" />
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="project-title">Project Title *</label>
+            <input type="text" id="project-title" required />
+          </div>
+          <div class="form-group">
+            <label for="project-type">Project Type *</label>
+            <select id="project-type" required>
+              <option value="">Select Type</option>
+              <option value="Full-Stack Application">Full-Stack Application</option>
+              <option value="Portfolio Website">Portfolio Website</option>
+              <option value="Mobile App">Mobile App</option>
+              <option value="Desktop Application">Desktop Application</option>
+              <option value="Data Analysis">Data Analysis</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="project-year">Year *</label>
+            <input type="number" id="project-year" min="2020" max="2030" required />
+          </div>
+          <div class="form-group">
+            <label for="project-status">Status *</label>
+            <select id="project-status" required>
+              <option value="">Select Status</option>
+              <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Planning">Planning</option>
+              <option value="Refactored">Refactored</option>
+              <option value="On Hold">On Hold</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="project-description">Description *</label>
+          <textarea id="project-description" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="project-image-path">Image Path *</label>
+          <input type="text" id="project-image-path" placeholder="images/project-image.jpg" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="project-github-url">GitHub URL</label>
+            <input type="url" id="project-github-url" />
+          </div>
+          <div class="form-group">
+            <label for="project-live-url">Live URL</label>
+            <input type="url" id="project-live-url" />
+        </div>
+      </div>
+
+        <div class="form-group">
+          <label for="project-tech-stack">Tech Stack (comma-separated) *</label>
+          <input type="text" id="project-tech-stack" placeholder="HTML5, CSS3, JavaScript, Flask" required />
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="project-featured" /> Featured Project
+          </label>
+      </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submit-btn">Save Project</button>
+          <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+        </div>
+      </form>
+      </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <small>© <span id="year"></span> Joey Laufter | <a href="https://github.com/Laufterbeast/joey-site" target="_blank" rel="noopener">View Source on GitHub</a></small>
+  </div>
+</footer>
+<script>
+document.getElementById('year').textContent=new Date().getFullYear();
+
+// Load projects from database
+async function loadProjects() {
+  try {
+    const response = await fetch('/api/projects');
+    const projects = await response.json();
+    renderProjects(projects);
+  } catch (error) {
+    console.error('Error loading projects:', error);
+    document.getElementById('projects-showcase').innerHTML = '<div class="error">Error loading projects. Please try again later.</div>';
+  }
+}
+
+function renderProjects(projects) {
+  const container = document.getElementById('projects-showcase');
+  
+  // Separate featured and regular projects
+  const featuredProjects = projects.filter(p => p.featured);
+  const regularProjects = projects.filter(p => !p.featured);
+  
+  let html = '';
+  
+  // Render featured project
+  if (featuredProjects.length > 0) {
+    const featured = featuredProjects[0];
+    html += `
+      <article class="project-card featured">
+        <div class="project-image">
+          <img src="${featured.image_path}" alt="${featured.title} project preview">
+          <div class="project-overlay">
+            <span class="project-type">${featured.project_type}</span>
+          </div>
+        </div>
+        <div class="project-content">
+          <div class="project-meta">
+            <span class="project-year">${featured.year}</span>
+            <span class="project-status">${featured.status}</span>
+          </div>
+          <h2>${featured.title}</h2>
+          <p class="project-description">${featured.description}</p>
+          <div class="tech-stack">
+            ${featured.tech_stack.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+          </div>
+          <div class="project-actions">
+            ${featured.github_url ? `
+              <a class="btn btn-primary" href="${featured.github_url}" target="_blank" rel="noopener">
+                <span>View Repository</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                </svg>
+              </a>
+            ` : ''}
+            ${featured.live_url ? `
+              <a class="btn btn-secondary" href="${featured.live_url}" target="_blank" rel="noopener">
+                <span>Live Demo</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                </svg>
+              </a>
+            ` : ''}
+            <button class="btn btn-outline edit-btn" onclick="editProject(${featured.id})">
+              <span>Edit Project</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn btn-danger delete-btn" onclick="deleteProject(${featured.id}, '${featured.title}')">
+              <span>Delete</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+  
+  // Render regular projects in grid
+  if (regularProjects.length > 0) {
+    html += '<div class="projects-grid">';
+    regularProjects.forEach(project => {
+      html += `
+        <article class="project-card">
+          <div class="project-image">
+            <img src="${project.image_path}" alt="${project.title} project preview">
+            <div class="project-overlay">
+              <span class="project-type">${project.project_type}</span>
+            </div>
+          </div>
+          <div class="project-content">
+            <div class="project-meta">
+              <span class="project-year">${project.year}</span>
+              <span class="project-status">${project.status}</span>
+            </div>
+            <h3>${project.title}</h3>
+            <p class="project-description">${project.description}</p>
+            <div class="tech-stack">
+              ${project.tech_stack.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+            </div>
+            <div class="project-actions">
+              ${project.github_url ? `
+                <a class="btn btn-secondary" href="${project.github_url}" target="_blank" rel="noopener">
+                  <span>View Code</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                  </svg>
+                </a>
+              ` : ''}
+              ${project.live_url ? `
+                <a class="btn btn-primary" href="${project.live_url}" target="_blank" rel="noopener">
+                  <span>Live Demo</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                  </svg>
+                </a>
+              ` : ''}
+              ${!project.github_url && !project.live_url ? `
+                <a class="btn btn-outline" href="#" aria-disabled="true">
+                  <span>Coming Soon</span>
+                </a>
+              ` : ''}
+              <button class="btn btn-outline edit-btn" onclick="editProject(${project.id})">
+                <span>Edit</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="btn btn-danger delete-btn" onclick="deleteProject(${project.id}, '${project.title}')">
+                <span>Delete</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  container.innerHTML = html;
+}
+
+// Load projects when page loads
+document.addEventListener('DOMContentLoaded', loadProjects);
+
+// Project management functionality
+let allProjects = [];
+let isEditing = false;
+
+function addNewProject() {
+  isEditing = false;
+  document.getElementById('modal-title').textContent = 'Add New Project';
+  document.getElementById('submit-btn').textContent = 'Save Project';
+  document.getElementById('project-form').reset();
+  document.getElementById('project-id').value = '';
+  document.getElementById('project-modal').classList.remove('hidden');
+}
+
+async function editProject(projectId) {
+  isEditing = true;
+  try {
+    const response = await fetch(`/api/projects/${projectId}`);
+    const project = await response.json();
+    
+    if (response.ok) {
+      // Populate the form
+      document.getElementById('modal-title').textContent = 'Edit Project';
+      document.getElementById('submit-btn').textContent = 'Save Changes';
+      document.getElementById('project-id').value = project.id;
+      document.getElementById('project-title').value = project.title;
+      document.getElementById('project-type').value = project.project_type;
+      document.getElementById('project-year').value = project.year;
+      document.getElementById('project-status').value = project.status;
+      document.getElementById('project-description').value = project.description;
+      document.getElementById('project-image-path').value = project.image_path;
+      document.getElementById('project-github-url').value = project.github_url || '';
+      document.getElementById('project-live-url').value = project.live_url || '';
+      document.getElementById('project-tech-stack').value = project.tech_stack.join(', ');
+      document.getElementById('project-featured').checked = project.featured;
+      
+      // Show the modal
+      document.getElementById('project-modal').classList.remove('hidden');
+    } else {
+      alert('Error loading project details');
+    }
+  } catch (error) {
+    console.error('Error loading project:', error);
+    alert('Error loading project details');
+  }
+}
+
+function closeProjectModal() {
+  document.getElementById('project-modal').classList.add('hidden');
+  document.getElementById('project-form').reset();
+  isEditing = false;
+}
+
+// Handle form submission
+document.getElementById('project-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const projectId = document.getElementById('project-id').value;
+  const formData = {
+    title: document.getElementById('project-title').value,
+    project_type: document.getElementById('project-type').value,
+    year: parseInt(document.getElementById('project-year').value),
+    status: document.getElementById('project-status').value,
+    description: document.getElementById('project-description').value,
+    image_path: document.getElementById('project-image-path').value,
+    github_url: document.getElementById('project-github-url').value || null,
+    live_url: document.getElementById('project-live-url').value || null,
+    tech_stack: document.getElementById('project-tech-stack').value.split(',').map(s => s.trim()).filter(s => s),
+    featured: document.getElementById('project-featured').checked
+  };
+
+  try {
+    const url = isEditing ? `/api/projects/${projectId}` : '/api/projects';
+    const method = isEditing ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (response.ok) {
+      closeProjectModal();
+      loadProjects(); // Reload projects to show changes
+      
+      if (isEditing) {
+        alert('Project updated successfully!');
+      } else {
+        alert('Project created successfully!');
+      }
+    } else {
+      const error = await response.json();
+      alert(`Error: ${error.error || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error('Error saving project:', error);
+    alert('Error saving project');
+  }
+});
+
+// Close modal when clicking outside
+document.getElementById('project-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('project-modal')) {
+    closeProjectModal();
+  }
+});
+
+// Delete project functionality
+async function deleteProject(projectId, projectTitle) {
+  // Show confirmation dialog
+  const confirmed = confirm(`Are you sure you want to delete "${projectTitle}"?\n\nThis action cannot be undone.`);
+  
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/projects/${projectId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      // Show success message
+      alert(`"${projectTitle}" has been deleted successfully.`);
+      // Reload projects to show updated list
+      loadProjects();
+    } else {
+      const error = await response.json();
+      alert(`Error deleting project: ${error.error || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    alert('Error deleting project. Please try again.');
+  }
+}
+</script>
+</body>
+</html>
+

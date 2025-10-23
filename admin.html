@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Project Admin — Joey Laufter</title>
+  <meta name="description" content="Admin panel for managing projects." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .admin-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .admin-header { text-align: center; margin-bottom: 30px; }
+    .project-form { background: var(--panel); padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label { margin-bottom: 5px; font-weight: 600; }
+    .form-group input, .form-group textarea, .form-group select { 
+      padding: 10px; border: 1px solid #2a345c; border-radius: 8px; 
+      background: #0f1426; color: var(--text); 
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .tech-tags-input { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tech-tag { background: #1a2140; padding: 5px 10px; border-radius: 15px; font-size: 12px; }
+    .tech-tag .remove { margin-left: 5px; cursor: pointer; color: var(--danger); }
+    .projects-list { display: grid; gap: 15px; }
+    .project-item { background: var(--panel); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .project-info h3 { margin: 0 0 5px 0; }
+    .project-info p { margin: 0; color: var(--muted); font-size: 14px; }
+    .project-actions { display: flex; gap: 10px; }
+    .btn-small { padding: 5px 10px; font-size: 12px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="index.html">Joey Laufter</a>
+      <nav aria-label="Primary" class="nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About Me</a>
+        <a href="resume.html">Resume</a>
+        <a href="projects.html">Projects</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <div class="admin-header">
+      <h1>Project Admin</h1>
+      <p>Manage your projects database</p>
+    </div>
+
+    <!-- Add/Edit Project Form -->
+    <div class="project-form">
+      <h2 id="form-title">Add New Project</h2>
+      <form id="project-form">
+        <input type="hidden" id="project-id" />
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="title">Project Title *</label>
+            <input type="text" id="title" required />
+          </div>
+          <div class="form-group">
+            <label for="project-type">Project Type *</label>
+            <select id="project-type" required>
+              <option value="">Select Type</option>
+              <option value="Full-Stack Application">Full-Stack Application</option>
+              <option value="Portfolio Website">Portfolio Website</option>
+              <option value="Mobile App">Mobile App</option>
+              <option value="Desktop Application">Desktop Application</option>
+              <option value="Data Analysis">Data Analysis</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="year">Year *</label>
+            <input type="number" id="year" min="2020" max="2030" required />
+          </div>
+          <div class="form-group">
+            <label for="status">Status *</label>
+            <select id="status" required>
+              <option value="">Select Status</option>
+              <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Planning">Planning</option>
+              <option value="Refactored">Refactored</option>
+              <option value="On Hold">On Hold</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea id="description" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="image-path">Image Path *</label>
+          <input type="text" id="image-path" placeholder="images/project-image.jpg" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="github-url">GitHub URL</label>
+            <input type="url" id="github-url" />
+          </div>
+          <div class="form-group">
+            <label for="live-url">Live URL</label>
+            <input type="url" id="live-url" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tech-stack">Tech Stack (comma-separated) *</label>
+          <input type="text" id="tech-stack" placeholder="HTML5, CSS3, JavaScript, Flask" required />
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="featured" /> Featured Project
+          </label>
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary">Save Project</button>
+          <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Projects List -->
+    <div class="projects-list" id="projects-list">
+      <!-- Projects will be loaded here -->
+    </div>
+  </main>
+
+  <script>
+    let projects = [];
+    let editingProject = null;
+
+    // Load projects on page load
+    document.addEventListener('DOMContentLoaded', loadProjects);
+
+    async function loadProjects() {
+      try {
+        const response = await fetch('/api/projects');
+        projects = await response.json();
+        renderProjects();
+      } catch (error) {
+        console.error('Error loading projects:', error);
+      }
+    }
+
+    function renderProjects() {
+      const container = document.getElementById('projects-list');
+      container.innerHTML = '';
+
+      projects.forEach(project => {
+        const projectDiv = document.createElement('div');
+        projectDiv.className = 'project-item';
+        projectDiv.innerHTML = `
+          <div class="project-info">
+            <h3>${project.title} ${project.featured ? '⭐' : ''}</h3>
+            <p>${project.project_type} • ${project.year} • ${project.status}</p>
+            <p>Tech: ${project.tech_stack.join(', ')}</p>
+          </div>
+          <div class="project-actions">
+            <button class="btn btn-small" onclick="editProject(${project.id})">Edit</button>
+            <button class="btn btn-small btn-secondary" onclick="deleteProject(${project.id})">Delete</button>
+          </div>
+        `;
+        container.appendChild(projectDiv);
+      });
+    }
+
+    function editProject(id) {
+      const project = projects.find(p => p.id === id);
+      if (!project) return;
+
+      editingProject = project;
+      document.getElementById('form-title').textContent = 'Edit Project';
+      document.getElementById('project-id').value = project.id;
+      document.getElementById('title').value = project.title;
+      document.getElementById('project-type').value = project.project_type;
+      document.getElementById('year').value = project.year;
+      document.getElementById('status').value = project.status;
+      document.getElementById('description').value = project.description;
+      document.getElementById('image-path').value = project.image_path;
+      document.getElementById('github-url').value = project.github_url || '';
+      document.getElementById('live-url').value = project.live_url || '';
+      document.getElementById('tech-stack').value = project.tech_stack.join(', ');
+      document.getElementById('featured').checked = project.featured;
+
+      // Scroll to form
+      document.querySelector('.project-form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function deleteProject(id) {
+      if (!confirm('Are you sure you want to delete this project?')) return;
+
+      try {
+        const response = await fetch(`/api/projects/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          loadProjects(); // Reload projects
+        } else {
+          alert('Error deleting project');
+        }
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        alert('Error deleting project');
+      }
+    }
+
+    function resetForm() {
+      editingProject = null;
+      document.getElementById('form-title').textContent = 'Add New Project';
+      document.getElementById('project-form').reset();
+      document.getElementById('project-id').value = '';
+    }
+
+    // Handle form submission
+    document.getElementById('project-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = {
+        title: document.getElementById('title').value,
+        project_type: document.getElementById('project-type').value,
+        year: parseInt(document.getElementById('year').value),
+        status: document.getElementById('status').value,
+        description: document.getElementById('description').value,
+        image_path: document.getElementById('image-path').value,
+        github_url: document.getElementById('github-url').value || null,
+        live_url: document.getElementById('live-url').value || null,
+        tech_stack: document.getElementById('tech-stack').value.split(',').map(s => s.trim()).filter(s => s),
+        featured: document.getElementById('featured').checked
+      };
+
+      try {
+        const projectId = document.getElementById('project-id').value;
+        const url = projectId ? `/api/projects/${projectId}` : '/api/projects';
+        const method = projectId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          resetForm();
+          loadProjects(); // Reload projects
+        } else {
+          const error = await response.json();
+          alert(`Error: ${error.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error saving project:', error);
+        alert('Error saving project');
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+

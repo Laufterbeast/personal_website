@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Joey Laufter — Resume</title>
+  <meta name="description" content="Joey Laufter’s resume: education, experience, skills, and achievements." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="index.html">Joey Laufter</a>
+      <nav aria-label="Primary" class="nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About Me</a>
+        <a href="resume.html" aria-current="page" class="active">Resume</a>
+        <a href="projects.html">Projects</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Resume</h1>
+
+    <!-- Education & Experience Summary -->
+    <section class="resume-summary">
+      <h2>Joseph Laufter</h2>
+      
+      <div class="summary-grid">
+        <div class="summary-section">
+          <h3>Education</h3>
+          <ul>
+            <li><strong>M.S. in Information Systems</strong><br>
+                Kelley School of Business, Indiana University<br>
+                <em>Expected May 2026</em></li>
+            <li><strong>B.S. in Business, Major in Information Systems</strong><br>
+                Kelley School of Business, Indiana University<br>
+                <em>Graduated 2025</em></li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <h3>Experience</h3>
+          <ul>
+            <li><strong>Commercial Information Systems Intern</strong><br>
+                CIBC, Chicago<br>
+                <em>Supported digital transformation initiatives and client reporting systems</em></li>
+            <li><strong>Information Systems Assurance Intern</strong><br>
+                BDO, New York<br>
+                <em>Assisted in IT audit procedures and system control evaluations</em></li>
+            <li><strong>Head of Honor Board</strong><br>
+                Sigma Alpha Epsilon Fraternity<br>
+                <em>Leadership role in accountability and conduct management</em></li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <h3>Skills</h3>
+          <div class="skills-grid">
+            <div class="skill-category">
+              <strong>Technical:</strong><br>
+              SQL, Python, R, Tableau, Excel, HTML/CSS
+            </div>
+            <div class="skill-category">
+              <strong>Soft Skills:</strong><br>
+              Teamwork, Communication, Leadership
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Embedded PDF Resume -->
+    <section class="pdf-resume">
+      <h2>Full Resume</h2>
+      <div class="pdf-container">
+        <iframe src="resume_file/Laufter_Joseph_Resume.pdf" width="100%" height="800" title="Joseph Laufter Resume PDF">
+          <p>Your browser doesn't support PDFs. <a href="resume_file/Laufter_Joseph_Resume.pdf">Download the PDF</a>.</p>
+        </iframe>
+      </div>
+      <div class="download-section">
+        <a href="resume_file/Laufter_Joseph_Resume.pdf" class="btn download-btn" download>
+          Download Resume (PDF)
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>© <span id="year"></span> Joey Laufter | <a href="https://github.com/Laufterbeast/joey-site" target="_blank" rel="noopener">View Source on GitHub</a></small>
+    </div>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
